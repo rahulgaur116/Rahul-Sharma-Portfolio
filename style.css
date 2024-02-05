@@ -6,7 +6,7 @@
 
 body {
   font-family: sans-serif;
-  
+  animation: fade 30s infinite;
 }
 header {
 background-image: url("images/main.jpg");
@@ -72,6 +72,7 @@ width: 25%;
 position: relative;
 margin-top: 10px;
 text-align: center;
+color: white;
 }
 
 section h3::after {
@@ -88,6 +89,7 @@ background-color: gray;
 .content {
 width: 75%;
 padding-left: 16px;
+color: white;
 }
 
 .project-container {
@@ -224,7 +226,7 @@ text-decoration: none;
 }
 
 .content ul li {
-margin-bottom: 8px;
+/* margin-top: 20px; */
 text-decoration: none;
 display: inline-block;
 }
@@ -235,13 +237,18 @@ display: inline-block;
 
 @keyframes fade {
   0% {
-    background-color: gray;
+    background-image: url("images/project1.jpg");
+  }
+  25% {
+    background-image: url("images/project2.jpg");
   }
   50% {
-    background-color: lightblue;
+    background-image: url("images/project3.jpg");;
+  }
+  75% {
+    background-image: url("images/project4.jpg");;
   }
   100% {
-    background-color: darkgray;
+    background-image: url("images/project5.jpg");;
   }
-  
   }
