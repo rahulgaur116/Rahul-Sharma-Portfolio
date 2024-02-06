@@ -1,8 +1,5 @@
 # Rahul-Sharma-Portfolio
 
-
-# Rahul Sharma Portfolio
-
 This is a portfolio webpage for Rahul Sharma, showcasing his projects and contact information.
 
 ## Table of Contents
@@ -17,7 +14,7 @@ The HTML code provided represents a portfolio webpage for Rahul Sharma. It inclu
 
 The "About Me" section provides a brief introduction to Rahul Sharma, highlighting his professional background and personal interests.
 
-The "Projects" section displays a list of projects, represented by clickable boxes. Each box represents a project and includes a description.
+The "Projects" section displays a list of projects, represented by clickable boxes. Each box represents a project and includes a description. Most project hyperlinks are emty and has bee assigned "www.google.com" hyperlink as Rahul Sharma is still to creae any projects for this course and in web developenent. These links and sections will be updated in future and his protfolio builds.
 
 The "Contact" section provides Rahul Sharma's contact information, including his name, email, phone number, and address.
 
@@ -38,4 +35,4 @@ If you have any questions or suggestions regarding this portfolio webpage, you c
 - Name: Rahul Sharma
 - Email: rahulgaur116@gmail.com
 - Phone: (347) 429-1610
-- Address: Nowhere
+- Address: 
