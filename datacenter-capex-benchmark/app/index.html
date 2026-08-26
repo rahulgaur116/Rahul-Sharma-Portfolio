@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CapexBench</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb;
+    --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --baseline: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --series-1: #2a78d6; --series-1-track: #cde2fb;
+    --accent: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19;
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --baseline: #383835;
+      --border: rgba(255,255,255,0.10);
+      --series-1: #3987e5; --series-1-track: #184f95;
+      --accent: #3987e5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19;
+    --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --baseline: #383835;
+    --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --series-1-track: #184f95;
+    --accent: #3987e5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  header {
+    padding: 20px 28px; border-bottom: 1px solid var(--grid);
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 19px; margin: 0; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; }
+  main {
+    display: grid; grid-template-columns: minmax(320px, 420px) 1fr;
+    gap: 24px; padding: 24px 28px; max-width: 1280px; margin: 0 auto;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px;
+  }
+  .card h2 { font-size: 13px; font-weight: 600; margin: 0 0 12px;
+             color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.04em; }
+  label { display: block; font-size: 12px; color: var(--ink-2); margin: 10px 0 3px; }
+  select, input[type=number], textarea {
+    width: 100%; padding: 7px 9px; border: 1px solid var(--baseline);
+    border-radius: 7px; background: var(--surface); color: var(--ink); font: inherit;
+  }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  button {
+    margin-top: 14px; padding: 9px 16px; border: 0; border-radius: 7px;
+    background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: default; }
+  /* Stat tiles */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .tile .label { font-size: 12px; color: var(--ink-2); }
+  .tile .value { font-size: 26px; font-weight: 600; margin-top: 2px; }
+  .tile .sub { font-size: 12px; color: var(--muted); }
+  /* Range band (P10-P90) */
+  .band { margin: 18px 0 6px; }
+  .band .track { position: relative; height: 8px; border-radius: 4px; background: var(--series-1-track); }
+  .band .fill { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--series-1); }
+  .band .p50dot {
+    position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--series-1); border: 2px solid var(--surface); transform: translate(-50%, -50%);
+  }
+  .band .ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 5px; }
+  /* Breakdown bar chart */
+  .chart { margin-top: 16px; }
+  .chart .brow { display: grid; grid-template-columns: 120px 1fr 76px; align-items: center; gap: 10px; margin: 7px 0; }
+  .chart .bname { font-size: 12px; color: var(--ink-2); text-align: right; }
+  .chart .bslot { position: relative; height: 22px; }
+  .chart .bar {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: var(--series-1); border-radius: 0 4px 4px 0; min-width: 2px;
+    transition: width 0.35s ease;
+  }
+  .chart .bval { font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .chart .axisline { border-left: 1px solid var(--baseline); position: absolute; top: 0; bottom: 0; left: 0; }
+  .note { color: var(--muted); font-size: 12px; margin-top: 12px; }
+  /* Benchmark table */
+  table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+  th, td { text-align: right; padding: 6px 10px; font-size: 13px; border-bottom: 1px solid var(--grid); }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; }
+  td { font-variant-numeric: tabular-nums; }
+  /* Chat */
+  .chatlog { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; margin-bottom: 12px; }
+  .msg { padding: 9px 13px; border-radius: 10px; max-width: 92%; white-space: pre-wrap; }
+  .msg.user { align-self: flex-end; background: var(--series-1); color: #fff; }
+  .msg.ai { align-self: flex-start; background: var(--page); border: 1px solid var(--grid); }
+  .msg.ai .tools { color: var(--muted); font-size: 11px; margin-top: 6px; }
+  .chatbox { display: flex; gap: 8px; }
+  .chatbox textarea { resize: none; height: 60px; }
+  .chatbox button { margin: 0; align-self: flex-end; }
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
+    padding: 6px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+  }
+  .error { color: #d03b3b; font-size: 13px; margin-top: 8px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tabs button { margin: 0; padding: 6px 12px; background: transparent; color: var(--ink-2);
+                 border: 1px solid var(--border); font-weight: 500; }
+  .tabs button.active { background: var(--accent); color: #fff; border-color: transparent; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CapexBench</h1>
+  <p>Parametric benchmarking for data center capex — cost per MW · cost per SF · AI query layer</p>
+</header>
+
+<main>
+  <section class="card" id="specCard">
+    <h2>Project spec</h2>
+    <label for="facility_type">Facility type</label>
+    <select id="facility_type"></select>
+    <label for="market">Market</label>
+    <select id="market"></select>
+    <div class="row2">
+      <div><label for="it_load_mw">IT load (MW)</label>
+        <input id="it_load_mw" type="number" value="60" min="0.1" step="1"></div>
+      <div><label for="kw_per_rack">Density (kW/rack)</label>
+        <input id="kw_per_rack" type="number" value="80" min="2" step="1"></div>
+    </div>
+    <div class="row2">
+      <div><label for="cooling">Cooling</label><select id="cooling"></select></div>
+      <div><label for="redundancy">Redundancy</label><select id="redundancy"></select></div>
+    </div>
+    <div class="row2">
+      <div><label for="build_type">Build type</label><select id="build_type"></select></div>
+      <div><label for="delivery_year">Delivery year</label>
+        <input id="delivery_year" type="number" value="2026" min="2019" max="2026" step="1"></div>
+    </div>
+    <button id="estimateBtn">Estimate capex</button>
+    <button id="benchmarkBtn" style="background:transparent;color:var(--accent);border:1px solid var(--accent)">Benchmark peers</button>
+    <div class="error" id="specError"></div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:24px">
+    <div class="card" id="resultCard">
+      <div class="tabs">
+        <button id="tabEstimate" class="active">Estimate</button>
+        <button id="tabBenchmark">Peer benchmark</button>
+      </div>
+
+      <div id="estimatePane">
+        <div class="tiles" id="tiles"><p class="note">Set a project spec and press <b>Estimate capex</b>.</p></div>
+        <div class="band hidden" id="band">
+          <div class="track"><div class="fill" id="bandFill"></div><div class="p50dot" id="bandDot"></div></div>
+          <div class="ends"><span id="bandLo"></span><span style="color:var(--ink-2)">cost per MW, P10 – P90</span><span id="bandHi"></span></div>
+        </div>
+        <div class="chart hidden" id="chart">
+          <h2 style="margin-top:18px">P50 cost breakdown ($M)</h2>
+          <div id="chartRows"></div>
+        </div>
+        <p class="note hidden" id="estimateNote"></p>
+      </div>
+
+      <div id="benchmarkPane" class="hidden">
+        <div id="benchmarkBody"><p class="note">Press <b>Benchmark peers</b> to see the distribution across comparable projects for the selected filters.</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Ask CapexBench (AI)</h2>
+      <div class="chatlog" id="chatlog"></div>
+      <div class="chatbox">
+        <textarea id="chatInput" placeholder="e.g. How much more per MW is a liquid-cooled AI build in Singapore vs Dallas for 2026 delivery?"></textarea>
+        <button id="chatSend">Ask</button>
+      </div>
+      <div class="error" id="chatError"></div>
+    </div>
+  </section>
+</main>
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmtM = v => "$" + (v >= 1000 ? (v/1000).toFixed(2) + "B" : v.toFixed(1) + "M");
+const fmt = v => v.toLocaleString();
+const SYSTEM_NAMES = {
+  shell_core: "Shell & core", electrical: "Electrical", mechanical: "Mechanical",
+  fitout_network: "Fit-out & network", gc_soft: "GC & soft costs",
+};
+
+async function api(path, body) {
+  const res = await fetch(path, body === undefined ? {} : {
+    method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || res.statusText);
+  return data;
+}
+
+async function init() {
+  const dims = await api("/api/dimensions");
+  const fill = (id, values, selected) => {
+    $(id).innerHTML = values.map(v => `<option ${v === selected ? "selected" : ""}>${v}</option>`).join("");
+  };
+  fill("facility_type", dims.categorical.facility_type, "hyperscale_ai");
+  fill("market", dims.categorical.market, "Phoenix");
+  fill("cooling", dims.categorical.cooling, "liquid_dtc");
+  fill("redundancy", dims.categorical.redundancy, "N+1");
+  fill("build_type", dims.categorical.build_type, "greenfield");
+}
+init().catch(e => $("specError").textContent = "Failed to load dimensions: " + e.message);
+
+function spec() {
+  return {
+    facility_type: $("facility_type").value, market: $("market").value,
+    it_load_mw: +$("it_load_mw").value, kw_per_rack: +$("kw_per_rack").value,
+    cooling: $("cooling").value, redundancy: $("redundancy").value,
+    build_type: $("build_type").value, delivery_year: +$("delivery_year").value,
+  };
+}
+
+function showPane(which) {
+  $("tabEstimate").classList.toggle("active", which === "estimate");
+  $("tabBenchmark").classList.toggle("active", which === "benchmark");
+  $("estimatePane").classList.toggle("hidden", which !== "estimate");
+  $("benchmarkPane").classList.toggle("hidden", which !== "benchmark");
+}
+$("tabEstimate").onclick = () => showPane("estimate");
+$("tabBenchmark").onclick = () => showPane("benchmark");
+
+$("estimateBtn").onclick = async () => {
+  $("specError").textContent = "";
+  showPane("estimate");
+  try {
+    const r = await api("/api/estimate", spec());
+    const t = r.cost_per_mw_musd, tot = r.total_capex_musd;
+    $("tiles").innerHTML = `
+      <div class="tile"><div class="label">Cost per MW (P50)</div>
+        <div class="value">${fmtM(t.p50)}</div><div class="sub">per MW IT load</div></div>
+      <div class="tile"><div class="label">Total capex (P50)</div>
+        <div class="value">${fmtM(tot.p50)}</div><div class="sub">${fmtM(tot.p10)} – ${fmtM(tot.p90)} band</div></div>
+      <div class="tile"><div class="label">Cost per SF (P50)</div>
+        <div class="value">$${fmt(r.cost_per_sf_usd.p50)}</div><div class="sub">${fmt(r.estimated_total_sf)} SF est.</div></div>`;
+    // P10-P90 band, padded axis
+    const lo = t.p10, hi = t.p90, pad = (hi - lo) * 0.18 || 1;
+    const min = lo - pad, max = hi + pad, W = v => ((v - min) / (max - min)) * 100;
+    $("bandFill").style.left = W(lo) + "%";
+    $("bandFill").style.width = (W(hi) - W(lo)) + "%";
+    $("bandDot").style.left = W(t.p50) + "%";
+    $("bandLo").textContent = fmtM(lo); $("bandHi").textContent = fmtM(hi);
+    $("band").classList.remove("hidden");
+    // Breakdown bars
+    const entries = Object.entries(r.breakdown_p50_musd);
+    const maxV = Math.max(...entries.map(([, v]) => v));
+    $("chartRows").innerHTML = entries.map(([k, v]) => `
+      <div class="brow" data-name="${SYSTEM_NAMES[k] || k}" data-val="${v}" data-share="${(r.breakdown_shares[k] * 100).toFixed(1)}">
+        <div class="bname">${SYSTEM_NAMES[k] || k}</div>
+        <div class="bslot"><div class="axisline"></div><div class="bar" style="width:${(v / maxV) * 100}%"></div></div>
+        <div class="bval">${fmtM(v)}</div>
+      </div>`).join("");
+    $("chart").classList.remove("hidden");
+    $("estimateNote").textContent = r.notes + ` Breakdown shares from ${r.n_comparables_for_breakdown} comparable projects.`;
+    $("estimateNote").classList.remove("hidden");
+    attachTooltips();
+  } catch (e) { $("specError").textContent = e.message; }
+};
+
+$("benchmarkBtn").onclick = async () => {
+  $("specError").textContent = "";
+  showPane("benchmark");
+  const s = spec();
+  const filters = {
+    facility_type: s.facility_type, market: s.market, cooling: s.cooling,
+    redundancy: s.redundancy, build_type: s.build_type,
+    it_load_mw_min: s.it_load_mw * 0.4, it_load_mw_max: s.it_load_mw * 2.5,
+  };
+  try {
+    const r = await api("/api/benchmark", { filters });
+    if (!r.n_comparables) { $("benchmarkBody").innerHTML = "<p class='note'>No comparable projects found.</p>"; return; }
+    const rows = [
+      ["Cost per MW ($M)", r.cost_per_mw_musd, v => v.toFixed(1)],
+      ["Cost per SF ($)", r.cost_per_sf_usd, v => fmt(Math.round(v))],
+      ["Cost per kW ($)", r.cost_per_kw_usd, v => fmt(Math.round(v))],
+      ["IT load (MW)", r.it_load_mw, v => v.toFixed(0)],
+    ];
+    const relaxed = r.filters_relaxed.length
+      ? `<p class="note">Too few peers for the full filter set — relaxed: ${r.filters_relaxed.join(", ")}.</p>` : "";
+    $("benchmarkBody").innerHTML = `
+      <p class="note" style="margin-top:0"><b style="color:var(--ink)">${r.n_comparables}</b> comparable projects</p>
+      <table><thead><tr><th>Metric</th><th>P10</th><th>P25</th><th>P50</th><th>P75</th><th>P90</th></tr></thead>
+      <tbody>${rows.map(([name, q, f]) => `<tr><td>${name}</td><td>${f(q.p10)}</td><td>${f(q.p25)}</td><td>${f(q.p50)}</td><td>${f(q.p75)}</td><td>${f(q.p90)}</td></tr>`).join("")}
+      </tbody></table>
+      <p class="note">Median breakdown share: ${Object.entries(r.breakdown_median_share)
+        .map(([k, v]) => `${SYSTEM_NAMES[k] || k} ${(v * 100).toFixed(0)}%`).join(" · ")}</p>${relaxed}`;
+  } catch (e) { $("benchmarkBody").innerHTML = `<p class="error">${e.message}</p>`; }
+};
+
+// Per-mark hover tooltips on breakdown bars
+function attachTooltips() {
+  const tip = $("tooltip");
+  document.querySelectorAll(".brow").forEach(row => {
+    row.onmousemove = ev => {
+      tip.style.display = "block";
+      tip.innerHTML = `<b>${row.dataset.name}</b><br>$${(+row.dataset.val).toFixed(1)}M · ${row.dataset.share}% of construction cost`;
+      tip.style.left = Math.min(ev.clientX + 14, innerWidth - 230) + "px";
+      tip.style.top = (ev.clientY + 14) + "px";
+    };
+    row.onmouseleave = () => tip.style.display = "none";
+  });
+}
+
+// AI chat
+let sessionId = null;
+$("chatSend").onclick = sendChat;
+$("chatInput").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
+});
+async function sendChat() {
+  const q = $("chatInput").value.trim();
+  if (!q) return;
+  $("chatError").textContent = "";
+  $("chatInput").value = "";
+  const log = $("chatlog");
+  log.insertAdjacentHTML("beforeend", `<div class="msg user"></div>`);
+  log.lastElementChild.textContent = q;
+  log.insertAdjacentHTML("beforeend", `<div class="msg ai">Thinking…</div>`);
+  const pending = log.lastElementChild;
+  log.scrollTop = log.scrollHeight;
+  $("chatSend").disabled = true;
+  try {
+    const r = await api("/api/ask", { question: q, session_id: sessionId });
+    sessionId = r.session_id;
+    pending.textContent = r.answer || "(no answer)";
+    if (r.tool_calls.length) {
+      const tools = document.createElement("div");
+      tools.className = "tools";
+      tools.textContent = "Queried: " + r.tool_calls.map(c => c.tool).join(", ");
+      pending.appendChild(tools);
+    }
+  } catch (e) {
+    pending.remove();
+    $("chatError").textContent = e.message;
+  } finally {
+    $("chatSend").disabled = false;
+    log.scrollTop = log.scrollHeight;
+  }
+}
+</script>
+</body>
+</html>
