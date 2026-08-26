@@ -30,7 +30,7 @@ an ML parametric estimate, with the underlying tool calls exposed for audit.
 cd datacenter-capex-benchmark
 pip install -r requirements.txt
 
-python -m capexbench.dataset   # generate data/benchmarks.csv
+python -m capexbench.dataset   # generate data/benchmarks.csv (deterministic, seeded)
 python -m capexbench.train     # train quantile models -> models/
 
 uvicorn api.main:app --port 8000
